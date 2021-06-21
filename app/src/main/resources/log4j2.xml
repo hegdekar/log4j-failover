@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="10">
+  <Properties>
+    <Property name="log-pattern" value="[%5.-5p]-[%d{UNIX_MILLIS}]-[%-27.-35t]-[%20c{1.}]--- %m%n"/>
+    <Property name="log-file-location" value="./logs"/>
+    <Property name="kafka-server-address" value="localhost:9092"/>
+    <Property name="kafka-topic-name" value="app-core-logs"/>
+  </Properties>
+  <Appenders>
+    <Kafka name="kafka" topic="${kafka-topic-name}" syncSend="false" retryCount="0" >
+      <JsonLayout/>
+      <Property name="bootstrap.servers">${kafka-server-address}</Property>
+    </Kafka>
+    <RollingFile name="rolling-file" fileName="${log-file-location}/app.log"
+                 filePattern="${log-file-location}/app-core-%d{MM-dd-yyyy}-%i.log.gz">
+      <Policies>
+        <OnStartupTriggeringPolicy/>
+        <SizeBasedTriggeringPolicy size="20 MB"/>
+        <TimeBasedTriggeringPolicy/>
+      </Policies>
+      <DefaultRolloverStrategy fileIndex="nomax"/>
+    </RollingFile>
+    <Console name="console">
+      <PatternLayout pattern="${log-pattern}"/>
+    </Console>
+    <FailOver name="fail-over" primary="rolling-file">
+      <Failovers>
+        <AppenderRef ref="console"/>
+      </Failovers>
+    </FailOver>
+  </Appenders>
+  <Loggers>
+    <Root level="TRACE" includeLocation="false">
+      <AppenderRef ref="fail-over"/>
+    </Root>
+  </Loggers>
+</Configuration>
